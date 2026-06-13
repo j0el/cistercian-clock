@@ -64,11 +64,11 @@ private fun renderCistercian(digits: TimeDigits, sizePx: Int): Bitmap {
 
     val cx = sizePx / 2f
     val cy = sizePx / 2f
-    val staveH = sizePx * 0.8f
+    val staveH = sizePx * 0.86f
     val top = cy - staveH / 2f
     val bottom = cy + staveH / 2f
-    val quadW = staveH * 0.36f
-    val halfH = staveH * 0.40f
+    val quadW = staveH * 0.30f
+    val halfH = staveH * 0.30f
 
     // vertical stave
     canvas.drawLine(cx, top, cx, bottom, paint)
