@@ -39,7 +39,7 @@ private fun ClockContent() {
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(Color(0xFF111111)),
+            .background(Color(0x00000000)),
         contentAlignment = Alignment.Center,
     ) {
         Image(
@@ -56,7 +56,7 @@ private fun renderCistercian(digits: TimeDigits, sizePx: Int): Bitmap {
     canvas.drawColor(android.graphics.Color.TRANSPARENT)
 
     val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.parseColor("#E6E6E6")
+        color = android.graphics.Color.RED
         strokeWidth = sizePx * 0.025f
         strokeCap = Paint.Cap.ROUND
         style = Paint.Style.STROKE
