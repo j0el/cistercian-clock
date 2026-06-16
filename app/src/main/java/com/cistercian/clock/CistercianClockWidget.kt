@@ -6,7 +6,6 @@ import android.graphics.Paint
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -17,7 +16,6 @@ import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.size
 import java.util.Calendar
 
 class CistercianClockWidget : GlanceAppWidget() {
@@ -32,10 +30,16 @@ private fun ClockContent() {
     val cal = Calendar.getInstance()
     val hour = cal.get(Calendar.HOUR_OF_DAY)
     val minute = cal.get(Calendar.MINUTE)
-    val digits = decomposeTime(hour, minute)
+    val month = cal.get(Calendar.MONTH) + 1
+    val day = cal.get(Calendar.DAY_OF_MONTH)
 
-    val bitmap = renderCistercian(digits, sizePx = 300)
+    val bitmap = renderBothGlyphs(
+        dateDigits = decomposeDate(month, day),
+        timeDigits = decomposeTime(hour, minute),
+    )
 
+    // Bitmap aspect ratio is ~(2*glyphW + gap + 4) : bitmapH
+    // At bitmapH=300: ~365 x 300, so display at 110 x 90 dp
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -44,43 +48,65 @@ private fun ClockContent() {
     ) {
         Image(
             provider = ImageProvider(bitmap),
-            contentDescription = "%02d:%02d".format(hour, minute),
-            modifier = GlanceModifier.size(120.dp),
+            contentDescription = "%02d/%02d %02d:%02d".format(month, day, hour, minute),
+            modifier = GlanceModifier.fillMaxSize(),
         )
     }
 }
 
-private fun renderCistercian(digits: TimeDigits, sizePx: Int): Bitmap {
-    val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+private fun renderBothGlyphs(dateDigits: TimeDigits, timeDigits: TimeDigits): Bitmap {
+    val bitmapH = 300
+    val padding = 2
+    val gap = 50
+    val staveH = (bitmapH - 2 * padding).toFloat()
+    val quadW = staveH * 0.30f
+    val halfH = staveH * 0.30f
+    val glyphW = 2 * quadW
+    val bitmapW = (2 * glyphW + gap + 2 * padding).toInt()
+
+    val bmp = Bitmap.createBitmap(bitmapW, bitmapH, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
     canvas.drawColor(android.graphics.Color.TRANSPARENT)
 
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.RED
-        strokeWidth = sizePx * 0.025f
+    val strokeWidth = bitmapH * 0.025f
+    val top = padding.toFloat()
+    val bottom = top + staveH
+
+    val dateCx = padding + quadW
+    val datePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLUE
+        this.strokeWidth = strokeWidth
         strokeCap = Paint.Cap.ROUND
         style = Paint.Style.STROKE
     }
-
-    val cx = sizePx / 2f
-    val cy = sizePx / 2f
-    val staveH = sizePx * 0.86f
-    val top = cy - staveH / 2f
-    val bottom = cy + staveH / 2f
-    val quadW = staveH * 0.30f
-    val halfH = staveH * 0.30f
-
-    // vertical stave
-    canvas.drawLine(cx, top, cx, bottom, paint)
-
+    canvas.drawLine(dateCx, top, dateCx, bottom, datePaint)
     for ((digit, quadrant) in listOf(
-        digits.units     to Quadrant.UNITS,
-        digits.tens      to Quadrant.TENS,
-        digits.hundreds  to Quadrant.HUNDREDS,
-        digits.thousands to Quadrant.THOUSANDS,
+        dateDigits.units     to Quadrant.UNITS,
+        dateDigits.tens      to Quadrant.TENS,
+        dateDigits.hundreds  to Quadrant.HUNDREDS,
+        dateDigits.thousands to Quadrant.THOUSANDS,
     )) {
-        cistercianStrokes(digit, quadrant, cx, top, bottom, quadW, halfH).forEach { seg ->
-            canvas.drawLine(seg.x1, seg.y1, seg.x2, seg.y2, paint)
+        cistercianStrokes(digit, quadrant, dateCx, top, bottom, quadW, halfH).forEach { seg ->
+            canvas.drawLine(seg.x1, seg.y1, seg.x2, seg.y2, datePaint)
+        }
+    }
+
+    val timeCx = padding + glyphW + gap + quadW
+    val timePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.RED
+        this.strokeWidth = strokeWidth
+        strokeCap = Paint.Cap.ROUND
+        style = Paint.Style.STROKE
+    }
+    canvas.drawLine(timeCx, top, timeCx, bottom, timePaint)
+    for ((digit, quadrant) in listOf(
+        timeDigits.units     to Quadrant.UNITS,
+        timeDigits.tens      to Quadrant.TENS,
+        timeDigits.hundreds  to Quadrant.HUNDREDS,
+        timeDigits.thousands to Quadrant.THOUSANDS,
+    )) {
+        cistercianStrokes(digit, quadrant, timeCx, top, bottom, quadW, halfH).forEach { seg ->
+            canvas.drawLine(seg.x1, seg.y1, seg.x2, seg.y2, timePaint)
         }
     }
 

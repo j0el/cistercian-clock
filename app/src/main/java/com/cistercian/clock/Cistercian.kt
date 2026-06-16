@@ -68,3 +68,13 @@ fun decomposeTime(hour: Int, minute: Int): TimeDigits {
         thousands = (n / 1000) % 10,
     )
 }
+
+/** Decomposes a date into four Cistercian digits: month in thousands/hundreds, day in tens/units. */
+fun decomposeDate(month: Int, day: Int): TimeDigits {
+    return TimeDigits(
+        units     = day % 10,
+        tens      = day / 10,
+        hundreds  = month % 10,
+        thousands = month / 10,
+    )
+}
