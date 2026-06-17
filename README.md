@@ -1,21 +1,63 @@
 # cistercian-clock
 
-Android home-screen widget that displays the current time as a [Cistercian numeral](https://en.wikipedia.org/wiki/Cistercian_numerals) glyph. Updates every minute via `AlarmManager`.
+Android home-screen widget that displays the current **date and time** as a pair of [Cistercian numeral](https://en.wikipedia.org/wiki/Cistercian_numerals) glyphs. Updates every minute via `AlarmManager`.
 
 Built with Jetpack Glance (Compose-based widget API), targeting Android 8+ (API 26), optimised for Pixel / Android 16 (API 36).
 
+---
+
+## Reading the widget
+
+Two glyphs are shown side by side:
+
+| Glyph | Color | Thousands / Hundreds | Tens / Units |
+|-------|-------|----------------------|--------------|
+| Left  | Blue  | Month of year        | Day of month |
+| Right | Red   | Hour (24h)           | Minute       |
+
+e.g. **14 June at 09:37** → blue glyph = `0614`, red glyph = `0937`
+
+### How Cistercian numerals work
+
+Each glyph is a single vertical stave divided into four quadrants. One digit (0–9) is encoded in each quadrant by the pattern of strokes attached to the stave:
+
+![Cistercian digit and quadrant reference](docs/cistercian-reference.svg)
+
+The quadrant positions:
+
+```
+  tens  |  units
+        |          ← stave
+thousands | hundreds
+```
+
+Digit 0 is represented by the absence of marks (stave only). Combining all four quadrants produces a single glyph that encodes any number from 0–9999.
+
+---
+
 ## How it works
 
-The current time is formatted as HHMM (0–2359) and decomposed into four digits — units, tens, hundreds, thousands — each rendered in its canonical quadrant of the stave:
+### Date glyph (blue)
 
-| Quadrant    | Position     | Digit |
+| Quadrant    | Position     | Value |
 |-------------|--------------|-------|
-| Upper-right | Units        | HHMM % 10 |
-| Upper-left  | Tens         | (HHMM/10) % 10 |
-| Lower-right | Hundreds     | (HHMM/100) % 10 |
-| Lower-left  | Thousands    | HHMM/1000 |
+| Upper-left  | Tens         | month / 10 |
+| Upper-right | Units        | month % 10 |
+| Lower-left  | Thousands    | day / 10   |
+| Lower-right | Hundreds     | day % 10   |
 
-e.g. 14:37 → 1437 → units=7, tens=3, hundreds=4, thousands=1.
+### Time glyph (red)
+
+| Quadrant    | Position     | Value |
+|-------------|--------------|-------|
+| Upper-left  | Tens         | hour / 10  |
+| Upper-right | Units        | hour % 10  |
+| Lower-left  | Thousands    | minute / 10 |
+| Lower-right | Hundreds     | minute % 10 |
+
+e.g. 09:37 → units=9, tens=0, hundreds=7, thousands=3
+
+---
 
 ## Prerequisites
 
@@ -30,17 +72,28 @@ e.g. 14:37 → 1437 → units=7, tens=3, hundreds=4, thousands=1.
 3. Run on a device/emulator: **Run ▶ app**.
 4. Long-press the home screen → **Widgets** → **Cistercian Clock**.
 
+The widget defaults to **1×1** and is resizable in both directions (drag handles appear on long-press).
+
+> **Note:** If building from the terminal, the system JDK must be version 17 or 21. On macOS with Android Studio installed:
+> ```bash
+> JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew assembleDebug
+> ```
+
 ## Project layout
 
 ```
 app/src/main/java/com/cistercian/clock/
-  Cistercian.kt              — stroke table, quadrant transforms, time decomposition
-  CistercianClockWidget.kt   — Glance composable + Bitmap renderer
+  Cistercian.kt              — stroke table, quadrant transforms, decomposeTime/decomposeDate
+  CistercianClockWidget.kt   — Glance composable + combined bitmap renderer (renderBothGlyphs)
   CistercianClockReceiver.kt — GlanceAppWidgetReceiver + AlarmManager scheduling
 app/src/main/res/
-  xml/cistercian_clock_widget_info.xml — widget metadata (2×2 cells)
+  xml/cistercian_clock_widget_info.xml — widget metadata (1×1 default, resizable)
   values/strings.xml
+docs/
+  cistercian-reference.svg   — digit and quadrant reference diagram
 ```
+
+---
 
 ## Attributions
 
