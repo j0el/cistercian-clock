@@ -65,6 +65,18 @@ e.g. 09:37 → units=9, tens=0, hundreds=7, thousands=3
 - Android SDK 26+ (API 36 recommended; install via SDK Manager)
 - A physical device or emulator running Android 8.0+
 
+## Lock screen (Samsung One UI)
+
+The widget can be placed on a Samsung lock screen through **Good Lock → LockStar**
+(Cover or Main screen; each is configured separately): tap empty space, then
+**App Widgets**, and pick *Cistercian Clock*.
+
+For LockStar to offer it, the provider XML must declare an `android:initialLayout`
+(Glance's `@layout/glance_default_loading_layout`). Without it Android registers
+`initialLayout=#0` and LockStar does not list the widget. Verified on a Galaxy Z
+Fold 8, 2026-11-21. Neither `widgetCategory="keyguard"` nor Samsung's
+`sub_screen` metadata was needed — the category stays `home_screen`.
+
 ## Build & install
 
 1. Open the `cistercian-clock/` folder in Android Studio.
